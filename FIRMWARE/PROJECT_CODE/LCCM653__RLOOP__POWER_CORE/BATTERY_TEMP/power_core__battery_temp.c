@@ -59,6 +59,27 @@ void vPWRNODE_BATTTEMP__Process(void)
 	//process any search tasks
 	vDS18B20_ADDX__SearchSM_Process();
 #endif
+	Lint16 t[540];
+	int i, j;
+
+#ifndef WIN32
+#else
+	// TODO make fake temperatures
+#endif
+
+	// send all temperatures to ground station
+	rI2CTX_beginFrame();
+	for (i = 0; i < 540; i++) {
+		rI2CTX_addParameter_int16(i, t[i]);
+	}
+	i = rI2CTX_endFrame();
+	for (j = 0; i < j; i++) {
+#ifndef WIN32
+		// TODO send out a byte from rI2CTX_buffer[j] to serial port
+#else
+		// TODO send out a byte from rI2CTX_buffer[j] to emulator
+#endif
+	}
 }
 
 

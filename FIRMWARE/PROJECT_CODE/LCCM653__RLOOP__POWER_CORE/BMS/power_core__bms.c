@@ -35,7 +35,7 @@ void vPWRNODE_BMS__Init(void)
 	//init the ATA6870 driver
 	vATA6870__Init();
 #endif
-
+	DEBUG_PRINT("Testing!");
 }
 
 /***************************************************************************//**

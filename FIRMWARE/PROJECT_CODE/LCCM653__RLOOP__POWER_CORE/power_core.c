@@ -21,6 +21,8 @@
 #if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 
 struct _strPWRNODE sPWRNODE;
+void onReceivedDecParam(struct rI2CRX_decParam decParam);
+void vPWRNODE_COMM__Process();
 
 /***************************************************************************//**
  * @brief
@@ -93,6 +95,10 @@ void vPWRNODE__Process(void)
 			//emit a message
 			DEBUG_PRINT("INIT_STATE__START");
 #endif
+			//TODO
+			rI2CRX_begin();
+			rI2CRX_recvDecParamCB = onReceivedDecParam;
+
 			//move to next state
 			sPWRNODE.sInit.sState = INIT_STATE__COMMS;
 
@@ -169,6 +175,9 @@ void vPWRNODE__Process(void)
 			//process any temp sensor items
 			vPWRNODE_BATTTEMP__Process();
 
+			vPWRNODE_COMM__Process(); 
+
+
 			break;
 
 		default:
@@ -177,6 +186,24 @@ void vPWRNODE__Process(void)
 
 	}//switch(sPWRNODE.sInit.sState)
 
+}
+
+void onReceivedDecParam(struct rI2CRX_decParam decParam) 
+{
+	printf("TODO");
+}
+
+void vPWRNODE_COMM__Process()
+{
+	//TODO
+	Luint8 x;
+	
+#ifndef WIN32
+	// TODO read a byte from serial port
+#else
+	// TODO read from emulator
+#endif
+	rI2CRX_receiveBytes(&x, 1);
 }
 
 
