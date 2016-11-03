@@ -163,7 +163,6 @@ void vPWRNODE__Process(void)
 
 
 		case INIT_STATE__TSYS01:
-			// ONLY NEEDS TO BE RUN ONCE
 		
 			// init TSYS01 ambient PV Temperature Sensor
 			vTSYS01__Init();

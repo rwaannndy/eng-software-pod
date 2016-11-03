@@ -43,7 +43,7 @@
 			/** Init the BMS layer */
 			INIT_STATE__BMS,
 
-			/** star the TSYS01 */
+			/** start the TSYS01 */
 			INIT_STATE__TSYS01,
 
 
@@ -112,6 +112,10 @@
 		void vPWRNODE_NODETEMP__Init(void);
 		void vPWRNODE_NODETEMP__Process(void);
 		Lfloat32 f32PWRNODE_NODETEMP__Get_Temperature_DegC(void);
+
+		//ambient temperature reading
+		void vTSYS01__Init(void);
+		void vTSYS01__Process(void);
 
 #ifdef WIN32
 		void vPWRNODE_WIN32__Init(void);
