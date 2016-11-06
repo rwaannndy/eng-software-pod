@@ -1,8 +1,20 @@
+/* TODO:
+ * doxygen compatible commenting
+ */
+
+ /**
+ * @file		LaserOrientation.c
+ * @brief		Orientation and Position from Distance Lasers
+ * @author		David
+ * @copyright	rLoop Inc.
+ * @st_fileID	
+ */
+
 #include "LaserOrientation.h"
-#include <stdio.h>
-#include <math.h>
 
 #define PI 3.14159265359
+
+float Roll, Pitch;
 
 //All units in mm
 //The math doesn't care as long as you're consistent
@@ -10,82 +22,109 @@
 //For the laser positions Z should be the reading when
 //the HDK is sitting flat on the 4 hover engines
 
-//Laser Position Near Engine 1
-float Laser1X = -100, Laser1Y = 100, Laser1Z = 75;
+// set laser structs
+struct _strComponent sLaser1;
+struct _strComponent sLaser2;
+struct _strComponent sLaser3;
 
-//Laser Position Near Engine 4
-float Laser2X = -100, Laser2Y = -100, Laser2Z = 75;
+// set hover engine structs
+struct _strComponent sHE1;
+struct _strComponent sHE2;
+struct _strComponent sHE3;
+struct _strComponent sHE4;
+struct _strComponent sHE5;
+struct _strComponent sHE6;
+struct _strComponent sHE7;
+struct _strComponent sHE8;
 
-//Laser Position Near Engine 3
-float Laser3X = 100, Laser3Y = -100, Laser3Z = 75;
 
-//Hover Engine Top Left from above
-float HE1X = -150, HE1Y=150, HE1Z=0;
+void vLaserOrientation__Init(void)
+{
+	// TODO: All positions of components need their positions measured and assigned here.
+		// blocked by installation of the components
 
-//Hover Engine Top Right from above
-float HE2X=150, HE2Y=150, HE2Z=0;
+	//Laser Positions
+	sLaser1.f16Position[3] = {8, 185, 35};
+	sLaser2.f16Position[3] = {-112, 18, 35};
+	sLaser3.f16Position[3] = {121, -53, 35};
 
-//Hover Engine Bottom Right from above
-float HE3X=150, HE3Y=-150, HE3Z=0;
+	//Hover Engine Positions {x,y,z} (from top view)
+	sHE1.f16Position[3] = {61, 130, 0}; // Top Left
+	sHE2.f16Position[3] = {62, 129, 0}; // Top Right
+	sHE3.f16Position[3] = {62, 126, 0}; // Bottom Right
+	sHE4.f16Position[3] = {60, 128, 0}; // Bottom Left
 
-//Hover Engine Bottom Left from above
-float HE4X=-150, HE4Y=-150, HE4Z=0;
+	// TODO: Needs to be implemented:
+	sHE5.f16Position[3] = {0, 0, 0}; // Top Left
+	sHE6.f16Position[3] = {0, 0, 0}; // Top Right
+	sHE7.f16Position[3] = {0, 0, 0}; // Bottom Right
+	sHE8.f16Position[3] = {0, 0, 0}; // Bottom Left
+
+	PrintPlane();
+
+}
+
+void vLaserOrientation__Process(void)
+{
+		CalculateGroundPlane(struct sLaser1, struct sLaser2, struct sLaser3);
+}
 
 //Basically the vehicle is a static reference
 //and we recalculate the orientation of the
 //ground plane relative to the vehicle
 //and the hover engines
-float PlaneA, PlaneB, PlaneC, PlaneD;
+Lfloat16 f16PlaneCoeffs[4]; //TODO: Check this size   // ordered as: A, B, C, D, decreasing polynomial terms
 
-void RecalcRoll();
-void RecalcPitch();
+void vRecalcRoll();
+void vRecalcPitch();
 
-float PointToPlaneDistance(float x, float y, float z)
+Lfloat16 f16PointToPlaneDistance(Lfloat16 f16Position[3])
 {
-	return (PlaneA * x + PlaneB * y + PlaneC*z + PlaneD) / sqrt((double)(PlaneA*PlaneA + PlaneB*PlaneB + PlaneC*PlaneC));
+	return (f16PlaneCoeffs[0] * f16Position[0] + f16PlaneCoeffs[1] * f16Position[1] + f16PlaneCoeffs[2] * f16Position[2] + f16PlaneCoeffs[3]) / sqrt((double)(f16PlaneCoeffs[0] * f16PlaneCoeffs[0] + f16PlaneCoeffs[1] * f16PlaneCoeffs[1] + f16PlaneCoeffs[2] * f16PlaneCoeffs[2]));
 }
 
 //After the laser readings are updated this function
 //will recalculate the orientation and engine heights
-void RecalcOrientation()
+void vRecalcOrientation(void)
 {
-	CalculateGroundPlane(Laser1X, Laser1Y, Laser1Z - Laser1Reading, Laser2X, Laser2Y, Laser2Z - Laser2Reading, Laser3X, Laser3Y, Laser3Z - Laser3Reading);
-	HE1HeightAboveTrack = PointToPlaneDistance(HE1X, HE1Y, HE1Z);
-	HE2HeightAboveTrack = PointToPlaneDistance(HE2X, HE2Y, HE2Z);
-	HE3HeightAboveTrack = PointToPlaneDistance(HE3X, HE3Y, HE3Z);
-	HE4HeightAboveTrack = PointToPlaneDistance(HE4X, HE4Y, HE4Z);
+    CalculateGroundPlane(Laser1X, Laser1Y, Laser1Z - Laser1Reading, Laser2X, Laser2Y, Laser2Z - Laser2Reading, Laser3X, Laser3Y, Laser3Z - Laser3Reading);
+
+	sHE1.f16Measurement = PointToPlaneDistance(sHE1.f16Position);
+	sHE2.f16Measurement = PointToPlaneDistance(sHE2.f16Position);
+	sHE3.f16Measurement = PointToPlaneDistance(sHE3.f16Position);
+	sHE4.f16Measurement = PointToPlaneDistance(sHE4.f16Position);
 	RecalcPitch();
 	RecalcRoll();
 }
 
 //The angle between two planes that yields the roll
-void RecalcRoll()
+void vRecalcRoll(void)
 {
 	//Normal vector of the other plane
 	float vec1x = 1, vec1y = 0, vec1z = 0;
 
-	//Angle between two planes
-	Roll = acos((double)((vec1x*PlaneA + vec1y*PlaneB + vec1z * PlaneC) / sqrt((double)(PlaneA*PlaneA + PlaneB*PlaneB + PlaneC*PlaneC))))*180/PI;
+	//Angle between two planes // TODO: Need to find a Lachlan file for this 
+	Roll = acos((double)((vec1x * f16PlaneCoeffs[0] + vec1y * f16PlaneCoeffs[1] + vec1z * f16PlaneCoeffs[2]) / sqrt((double)(f16PlaneCoeffs[0] * f16PlaneCoeffs[0] + f16PlaneCoeffs[1] * f16PlaneCoeffs[1] + f16PlaneCoeffs[2] * f16PlaneCoeffs[2])))) * 180/PI;
 }
 
 //The angle between two planes that yields the pitch
-void RecalcPitch()
+void vRecalcPitch(void)
 {
 	//Normal vector of the other plane
 	float vec1x = 0, vec1y = 1, vec1z = 0;
 
-	//Angle between two planes
-	Pitch = acos((double)((vec1x*PlaneA + vec1y*PlaneB + vec1z * PlaneC) / sqrt((double)(PlaneA*PlaneA + PlaneB*PlaneB + PlaneC*PlaneC)))) * 180 / PI;
+	//Angle between two planes // TODO: Need to find a Lachlan file for this 
+	Pitch = acos((double)((vec1x * f16PlaneCoeffs[0] + vec1y * f16PlaneCoeffs[1] + vec1z * f16PlaneCoeffs[2]) / sqrt((double)(f16PlaneCoeffs[0] * f16PlaneCoeffs[0] + f16PlaneCoeffs[1] * f16PlaneCoeffs[1] + f16PlaneCoeffs[2] * f16PlaneCoeffs[2])))) * 180 / PI;
 }
 
-void PrintPlane()
+void vPrintPlane(void)
 {
-	printf("A:%f B:%f C:%f D:%f\n", PlaneA, PlaneB, PlaneC, PlaneD);
+	// printf("A:%f B:%f C:%f D:%f\n", f16PlaneCoeffs[0], f16PlaneCoeffs[1], f16PlaneCoeffs[2], f16PlaneCoeffs[3]);
 }
 
 //Calculate the ground plane given three points
 //Ax + By + Cz + D = 0
-void CalculateGroundPlane(float X1, float Y1, float Z1, float X2, float Y2, float Z2, float X3, float Y3, float Z3)
+void vCalculateGroundPlane(struct sLaserA, struct sLaserB, struct sLaserC)
 {
 	float Vec1X, Vec1Y, Vec1Z;
 	float Vec2X, Vec2Y, Vec2Z;
@@ -93,12 +132,12 @@ void CalculateGroundPlane(float X1, float Y1, float Z1, float X2, float Y2, floa
 	float d;
 
 	//Calculate two vectors in the plane
-	Vec1X = X1 - X2;
-	Vec1Y = Y1 - Y2;
-	Vec1Z = Z1 - Z2;
-	Vec2X = X2 - X3;
-	Vec2Y = Y2 - Y3;
-	Vec2Z = Z2 - Z3;
+	Vec1X = sLaser1.f16Position[0] - sLaser2.f16Position[0];
+	Vec1Y = sLaser1.f16Position[1] - sLaser2.f16Position[1];
+	Vec1Z = (sLaser1.f16Position[2] - sLaser1.f16Measurement) - (sLaser2.f16Position[2] - sLaser2.f16Measurement);
+	Vec2X = sLaser2.f16Position[0] - sLaser3.f16Position[0];
+	Vec2Y = sLaser2.f16Position[1] - sLaser3.f16Position[1];
+	Vec2Z = (sLaser2.f16Position[2] - sLaser2.f16Measurement) - (sLaser3.f16Position[2] - sLaser3.f16Measurement);
 
 	//Calculate the cross product of the vectors
 	//to get a vector normal to the plane
@@ -117,10 +156,10 @@ void CalculateGroundPlane(float X1, float Y1, float Z1, float X2, float Y2, floa
 	//Plane in 3D: Ax + By + Cz + D = 0
 	//A, B, C is the vector normal to the plane
 	//Use one of our original points to calculate D
-	d = -1 * (XProductX*X1 + XProductY*Y1 + XProductZ*Z1);
+	d = -1 * (XProductX * sLaser1.f16Position[0] + XProductY * sLaser1.f16Position[1] + XProductZ * sLaser1.f16Position[2]);
 
-	PlaneA = XProductX;
-	PlaneB = XProductY;
-	PlaneC = XProductZ;
-	PlaneD = d;
+	f16PlaneCoeffs[0] = XProductX;
+	f16PlaneCoeffs[1] = XProductY;
+	f16PlaneCoeffs[2] = XProductZ;
+	f16PlaneCoeffs[3] = d;
 }
