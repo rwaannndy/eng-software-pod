@@ -10,6 +10,10 @@
  * @st_fileID	
  */
 
+//If we are using anything involving floating point trig and that trig is safety critical (i.e. pod distance or braking) 
+ //then we must also do a parallel equation in another data type to prevent the sorts of errors that are commonly seen with floating point trig.
+
+
 #include "LaserOrientation.h"
 
 #define PI 3.14159265359
