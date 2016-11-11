@@ -10,8 +10,10 @@
  * @st_fileID	
  */
 
-//If we are using anything involving floating point trig and that trig is safety critical (i.e. pod distance or braking) 
- //then we must also do a parallel equation in another data type to prevent the sorts of errors that are commonly seen with floating point trig.
+// TODO: If we are using anything involving floating point trig and that trig
+  // is safety critical (i.e. pod distance or braking) then we must also do a 
+  // parallel equation in another data type to prevent the sorts of errors that
+  // are commonly seen with floating point trig.
 
 
 #include "LaserOrientation.h"
@@ -58,7 +60,7 @@ void vLaserOrientation__Init(void)
 	sHE3.f16Position[3] = {62, 126, 0}; // Bottom Right
 	sHE4.f16Position[3] = {60, 128, 0}; // Bottom Left
 
-	// TODO: Needs to be implemented:
+	// TODO: These engines are not yet implemented in this code.
 	sHE5.f16Position[3] = {0, 0, 0}; // Top Left
 	sHE6.f16Position[3] = {0, 0, 0}; // Top Right
 	sHE7.f16Position[3] = {0, 0, 0}; // Bottom Right
