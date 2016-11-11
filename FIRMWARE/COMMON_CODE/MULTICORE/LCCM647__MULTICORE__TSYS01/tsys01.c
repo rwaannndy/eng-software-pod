@@ -1,7 +1,7 @@
 /**
  * @file		TSYS01.C
  * @brief		TSYS01 Temp Sensor Driver
- * @author		Dean, Lachlan Grogan
+ * @author		Dean Skoien, Lachlan Grogan
  * @st_fileID	LCCM647R0.FILE.000
  */
 /**
