@@ -76,6 +76,7 @@
 			uart_t* uart;
 			Luint8 u8Buff[3];
 			int id; // TODO: not used?
+			Lfloat* Offset; // TODO: what is this? not used.
 
 			Luint32 u32ValidResult;
 
@@ -89,17 +90,14 @@
 			optoncdt_flag_t flag;
 
 			/** counter the number of main program loops */
-			Luint32 u32LoopCounter;
+			Luint32 u32LoopCounter; // TODO: tie in to STATE__WAIT_LOOPS if it's needed
 
 			/** Last sampled ADC result*/
 			Luint32 u32LastResult;
 
 			/** The computed temp in deg C*/
 			Lfloat32 f32Distance; // TODO: check type and size
-				// formerly: float dist;
 
-			/** TODO: What is this? not used */
-			Lfloat* Offset;
 		};
 
 
