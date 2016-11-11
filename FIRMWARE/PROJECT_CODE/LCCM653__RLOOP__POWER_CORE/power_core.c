@@ -100,7 +100,13 @@ void vPWRNODE__Process(void)
 #endif
 
 			//start the pi comms layer
+<<<<<<< HEAD
 			vPWRNODE_PICOMMS__Init();
+=======
+			#if C_LOCALDEF__LCCM656__ENABLE_THIS_MODULE == 1U
+				vPWRNODE_PICOMMS__Init();
+			#endif
+>>>>>>> ca5677ac2f0b28ece0e72dd3dd6fa4dbd87a73f4
 
 			//move to next state
 			sPWRNODE.sInit.sState = INIT_STATE__COMMS;
@@ -185,6 +191,9 @@ void vPWRNODE__Process(void)
 		case INIT_STATE__RUN:
 
 			//normal run state
+			#if C_LOCALDEF__LCCM656__ENABLE_THIS_MODULE == 1U
+				vPWRNODE_PICOMMS__Process();
+			#endif
 
 			vPWRNODE_PICOMMS__Process();
 

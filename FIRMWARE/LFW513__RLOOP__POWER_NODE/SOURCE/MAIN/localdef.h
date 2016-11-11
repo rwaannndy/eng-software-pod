@@ -17,6 +17,11 @@ RLOOP - PI COMMUNICATIONS MODULE
 		#define C_LOCALDEF__LCCM656__USE_ON_RM4								(1U)
 		#define C_LOCALDEF__LCCM656__USE_ON_WIN32							(0U)
 
+<<<<<<< HEAD
+=======
+		/** enable the receiver side? */
+		#define C_LOCALDEF__LCCM656__ENABLE_RX								(0U)
+>>>>>>> ca5677ac2f0b28ece0e72dd3dd6fa4dbd87a73f4
 
 		/** Testing Options */
 		#define C_LOCALDEF__LCCM656__ENABLE_TEST_SPEC						(0U)
@@ -85,21 +90,6 @@ MS5607 - PRESSURE SENSOR
 
 	#endif //#if C_LOCALDEF__LCCM648__ENABLE_THIS_MODULE == 1U
 
-
-/*******************************************************************************
-TSYS01 - DIGITAL TEMP SENSOR
-*******************************************************************************/
-	#define C_LOCALDEF__LCCM647__ENABLE_THIS_MODULE							(1U)
-	#if C_LOCALDEF__LCCM647__ENABLE_THIS_MODULE == 1U
-
-
-		/** Testing Options */
-		#define C_LOCALDEF__LCCM647__ENABLE_TEST_SPEC						(0U)
-
-		/** Main include file */
-		#include <MULTICORE/LCCM647__MULTICORE__TSYS01/tsys01.h>
-
-	#endif //#if C_LOCALDEF__LCCM647__ENABLE_THIS_MODULE == 1U
 
 /*******************************************************************************
 DS2482S - I2C TO 1-WIRE CONVERTER
