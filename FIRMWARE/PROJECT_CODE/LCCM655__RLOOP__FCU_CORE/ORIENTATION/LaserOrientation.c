@@ -5,7 +5,7 @@
  /**
  * @file		LaserOrientation.c
  * @brief		Orientation and Position from Distance Lasers
- * @author		David
+ * @author		David, acaratel
  * @copyright	rLoop Inc.
  * @st_fileID
  */
@@ -29,8 +29,7 @@
 
 #define PI 3.14159265359
 
-Lfloat32 Roll, Pitch;
-int16 Yaw;
+int16 Roll, Pitch, Yaw;
 Lfloat32 Lateral;
 
 
@@ -48,6 +47,10 @@ Lfloat32 Lateral;
 struct _strComponent sLaser1;
 struct _strComponent sLaser2;
 struct _strComponent sLaser3;
+
+// set i-beam laser structs
+struct _strComponent bLaser1;
+struct _strComponent bLaser2;
 
 // set hover engine structs
 struct _strComponent sHE1;
@@ -71,12 +74,12 @@ void vLaserOrientation__Init(void)
 	sLaser3.f32Position[3] = {121, -53, 35};
 
 	// I-Beam laser positions
-	bLaser1.f32Position[1] = 25;
-	bLaser1.f32Position[2] = 0;
-	bLaser1.f32Position[3] = 35;
-	bLaser2.f32Position[1] = 25;
-	bLaser2.f32Position[2] = 100;
-	bLaser2.f32Position[3] = 35;
+	bLaser1.f32Position[1] = 25;  //x coord. laser 1
+	bLaser1.f32Position[2] = 0;   //y coord. laser 1
+	bLaser1.f32Position[3] = 35;  //z coord. laser 1
+	bLaser2.f32Position[1] = 25;  //x coord. laser 2
+	bLaser2.f32Position[2] = 100; //y coord. laser 2
+	bLaser2.f32Position[3] = 35;  //z coord. laser 2
 
 	//Hover Engine Positions {x,y,z} (from top view)
 	sHE1.f32Position[3] = {61, 130, 0}; // Top Left
@@ -134,7 +137,7 @@ void vRecalcRoll(void)
 	Lfloat32 f32vec1x = 1, f32vec1y = 0, f32vec1z = 0;
 
 	//Angle between two planes // TODO: Need to find a Lachlan func for this
-	Roll = acos((double)((f32vec1x * f32PlaneCoeffs[0] + f32vec1y * f32PlaneCoeffs[1] + f32vec1z * f32PlaneCoeffs[2]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2])))) * 180/PI;
+	Roll = (int16)(acos((double)((f32vec1x * f32PlaneCoeffs[0] + f32vec1y * f32PlaneCoeffs[1] + f32vec1z * f32PlaneCoeffs[2]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2])))) * 10000);
 }
 
 //The angle between two planes that yields the pitch
@@ -144,7 +147,7 @@ void vRecalcPitch(void)
 	Lfloat32 f32vec1x = 0, f32vec1y = 1, f32vec1z = 0;
 
 	//Angle between two planes // TODO: Need to find a Lachlan func for this
-	Pitch = acos((double)((f32vec1x * f32PlaneCoeffs[0] + f32vec1y * f32PlaneCoeffs[1] + f32vec1z * f32PlaneCoeffs[2]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2])))) * 180 / PI;
+	Pitch = (int16)(acos((double)((f32vec1x * f32PlaneCoeffs[0] + f32vec1y * f32PlaneCoeffs[1] + f32vec1z * f32PlaneCoeffs[2]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2])))) * 10000);
 }
 
 void vPrintPlane(void)
@@ -207,6 +210,6 @@ void vRecalcLateral(void) {
   Lfloat32 xdif = (Lfloat32)(bLaser1.f32Position[2] - bLaser2.f32Position[2]);
   Lfloat32 coef =
       ((Lfloat32)(bLaser2.f32Position[2]) / xdif * bLaser1.f32Measurement) -
-      ((float)(bLaser1.f32Position[2]) / xdif * bLaser2.f32Measurement);
+      ((Lfloat32)(bLaser1.f32Position[2]) / xdif * bLaser2.f32Measurement);
   Lateral = coef * cos((Lfloat32)(Yaw) / 10000.0);
 }
