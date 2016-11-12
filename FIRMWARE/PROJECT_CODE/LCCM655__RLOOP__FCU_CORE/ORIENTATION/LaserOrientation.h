@@ -1,9 +1,9 @@
 /**
  * @file		LaserOrientation.h
  * @brief		Orientation and Position from Distance Lasers
- * @author		David
+ * @author		David, Alessandro
  * @copyright	rLoop Inc.
- * @st_fileID	
+ * @st_fileID
  */
 
 
@@ -67,4 +67,5 @@ Lfloat32 f32PointToPlaneDistance(Lfloat32 f32Position[3]);
 void vRecalcOrientation(void);
 void vPrintPlane(void);
 void vCalculateGroundPlane(struct sLaserA, struct sLaserB, struct sLaserC);
-
+void vRecalcYaw(void);
+void vRecalcLateral(void);
