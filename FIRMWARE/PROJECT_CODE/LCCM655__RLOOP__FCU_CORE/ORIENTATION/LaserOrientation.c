@@ -7,11 +7,11 @@
  * @brief		Orientation and Position from Distance Lasers
  * @author		David
  * @copyright	rLoop Inc.
- * @st_fileID	
+ * @st_fileID
  */
 
 // TODO: If we are using anything involving floating point trig and that trig
-  // is safety critical (i.e. pod distance or braking) then we must also do a 
+  // is safety critical (i.e. pod distance or braking) then we must also do a
   // parallel equation in another data type to prevent the sorts of errors that
   // are commonly seen with floating point trig.
 
@@ -19,7 +19,7 @@
 // TODO:
 // - we now have a 4th laser facing the ground, which will help determine if
 //	the frame of the pod has twisted.
-// - will want to calc roll/pitch as seen by two sets of 3 lasers (a,b,c; b,c,d) 
+// - will want to calc roll/pitch as seen by two sets of 3 lasers (a,b,c; b,c,d)
 //	and return angle of twisting based on any discrepancy between the two measurements
 // - check flags from optoncdt.c to verify that all lasers are functional.
 //		- if one has failed, fall back to just pitch/roll with the 3 remaining
@@ -30,6 +30,9 @@
 #define PI 3.14159265359
 
 Lfloat32 Roll, Pitch;
+int16 Yaw;
+Lfloat32 Lateral;
+
 
 
 //All units in mm
@@ -37,6 +40,9 @@ Lfloat32 Roll, Pitch;
 
 //For the laser positions Z should be the reading when
 //the HDK is sitting flat on the 4 hover engines
+
+// Yaw value expressed accordingly the rloop system variable
+// http://confluence.rloop.org/display/SD/System+Variables
 
 // set laser structs
 struct _strComponent sLaser1;
@@ -63,6 +69,14 @@ void vLaserOrientation__Init(void)
 	sLaser1.f32Position[3] = {8, 185, 35};
 	sLaser2.f32Position[3] = {-112, 18, 35};
 	sLaser3.f32Position[3] = {121, -53, 35};
+
+	// I-Beam laser positions
+	bLaser1.f32Position[1] = 25;
+	bLaser1.f32Position[2] = 0;
+	bLaser1.f32Position[3] = 35;
+	bLaser2.f32Position[1] = 25;
+	bLaser2.f32Position[2] = 100;
+	bLaser2.f32Position[3] = 35;
 
 	//Hover Engine Positions {x,y,z} (from top view)
 	sHE1.f32Position[3] = {61, 130, 0}; // Top Left
@@ -119,7 +133,7 @@ void vRecalcRoll(void)
 	//Normal vector of the other plane
 	Lfloat32 f32vec1x = 1, f32vec1y = 0, f32vec1z = 0;
 
-	//Angle between two planes // TODO: Need to find a Lachlan func for this 
+	//Angle between two planes // TODO: Need to find a Lachlan func for this
 	Roll = acos((double)((f32vec1x * f32PlaneCoeffs[0] + f32vec1y * f32PlaneCoeffs[1] + f32vec1z * f32PlaneCoeffs[2]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2])))) * 180/PI;
 }
 
@@ -129,7 +143,7 @@ void vRecalcPitch(void)
 	//Normal vector of the other plane
 	Lfloat32 f32vec1x = 0, f32vec1y = 1, f32vec1z = 0;
 
-	//Angle between two planes // TODO: Need to find a Lachlan func for this 
+	//Angle between two planes // TODO: Need to find a Lachlan func for this
 	Pitch = acos((double)((f32vec1x * f32PlaneCoeffs[0] + f32vec1y * f32PlaneCoeffs[1] + f32vec1z * f32PlaneCoeffs[2]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2])))) * 180 / PI;
 }
 
@@ -165,7 +179,7 @@ void vCalculateGroundPlane(struct sLaserA, struct sLaserB, struct sLaserC)
 	//It affects which side of the plane has negative distances
 	if (f32XProductZ < 0){
 		f32XProductX *= -1;
-		f32XProductY *= -1; 
+		f32XProductY *= -1;
 		f32XProductZ *= -1;
 	}
 
@@ -178,4 +192,21 @@ void vCalculateGroundPlane(struct sLaserA, struct sLaserB, struct sLaserC)
 	f32PlaneCoeffs[1] = f32XProductY;
 	f32PlaneCoeffs[2] = f32XProductZ;
 	f32PlaneCoeffs[3] = f32d;
+}
+
+
+void vRecalcYaw(void) {
+  Lfloat32 sdif = (Lfloat32)(bLaser1.f32Measurement - bLaser2.f32Measurement);
+  Lfloat32 dtan = dif / ((Lfloat32)(bLaser1.f32Position[2] - bLaser2.f32Position[2]));
+  Yaw = (int16)(atan(dtan) * 10000);
+  // value expressed accordingly the rloop system variable
+  // http://confluence.rloop.org/display/SD/System+Variables
+}
+
+void vRecalcLateral(void) {
+  Lfloat32 xdif = (Lfloat32)(bLaser1.f32Position[2] - bLaser2.f32Position[2]);
+  Lfloat32 coef =
+      ((Lfloat32)(bLaser2.f32Position[2]) / xdif * bLaser1.f32Measurement) -
+      ((float)(bLaser1.f32Position[2]) / xdif * bLaser2.f32Measurement);
+  Lateral = coef * cos((Lfloat32)(Yaw) / 10000.0);
 }
