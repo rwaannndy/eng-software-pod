@@ -50,8 +50,8 @@ Structures
 *******************************************************************************/
 struct _strComponent // TODO: might want to make a separate one for HE/laser, so that laser readings can be appended. or should hover height be set there similarly
 {
-	Lfloat16 f16Position[3]; // x,y,z
-	Lfloat16 f16Measurement;
+	Lfloat32 f32Position[3]; // x,y,z
+	Lfloat32 f32Measurement;
 };
 
 
@@ -63,7 +63,7 @@ void vLaserOrientation__Init(void);
 void vLaserOrientation__Process(void);
 void vRecalcRoll(void);
 void vRecalcPitch(void);
-Lfloat16 f16PointToPlaneDistance(Lfloat16 f16Position[3]);
+Lfloat32 f32PointToPlaneDistance(Lfloat32 f32Position[3]);
 void vRecalcOrientation(void);
 void vPrintPlane(void);
 void vCalculateGroundPlane(struct sLaserA, struct sLaserB, struct sLaserC);
