@@ -312,6 +312,7 @@ Lfloat32 f32TSYS01__Get_TempDegC(void)
 	return sTSYS.f32TempDegC;
 }
 
+// TODO is the below supposed to be commented out?
 #endif //#if C_LOCALDEF__LCCM647__ENABLE_THIS_MODULE == 1U
 //safetys
 #ifndef C_LOCALDEF__LCCM647__ENABLE_THIS_MODULE

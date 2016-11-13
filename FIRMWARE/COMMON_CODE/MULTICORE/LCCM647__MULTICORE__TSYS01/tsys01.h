@@ -31,7 +31,6 @@
 			TSYS01_REG__k1_ADR = 0xA8,
 			TSYS01_REG__k0_ADR = 0xAA
 
-
 		}E_TSYS01_REGS_T;
 
 
