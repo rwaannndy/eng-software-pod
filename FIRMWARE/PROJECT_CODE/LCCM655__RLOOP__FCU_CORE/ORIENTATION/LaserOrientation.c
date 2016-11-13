@@ -29,9 +29,8 @@
 
 #define PI 3.14159265359
 
-int16 Roll, Pitch, Yaw;
-Lfloat32 Lateral;
-
+Lint16 s16Roll, s16Pitch, s16Yaw;
+Lfloat32 f32Lateral;
 
 
 //All units in mm
@@ -44,13 +43,13 @@ Lfloat32 Lateral;
 // http://confluence.rloop.org/display/SD/System+Variables
 
 // set laser structs
-struct _strComponent sLaser1;
-struct _strComponent sLaser2;
-struct _strComponent sLaser3;
+struct _strComponent sGroundLaser1;
+struct _strComponent sGroundLaser2;
+struct _strComponent sGroundLaser3;
 
 // set i-beam laser structs
-struct _strComponent bLaser1;
-struct _strComponent bLaser2;
+struct _strComponent sBeamLaser1;
+struct _strComponent sBeamLaser2;
 
 // set hover engine structs
 struct _strComponent sHE1;
@@ -62,24 +61,25 @@ struct _strComponent sHE6;
 struct _strComponent sHE7;
 struct _strComponent sHE8;
 
-
+// coordinate system: +x in direction of travel; +z up wrt gravity
 void vLaserOrientation__Init(void)
 {
 	// TODO: All positions of components need their positions measured and assigned here.
 		// blocked by installation of the components
 
-	//Laser Positions
-	sLaser1.f32Position[3] = {8, 185, 35};
-	sLaser2.f32Position[3] = {-112, 18, 35};
-	sLaser3.f32Position[3] = {121, -53, 35};
+	//Ground Facing Laser Positions
+	sGroundLaser1.f32Position[3] = {8, 185, 35};
+	sGroundLaser2.f32Position[3] = {-112, 18, 35};
+	sGroundLaser3.f32Position[3] = {121, -53, 35};
+	sGroundLaser4.f32Position[3] = {};
 
 	// I-Beam laser positions
-	bLaser1.f32Position[1] = 25;  //x coord. laser 1
-	bLaser1.f32Position[2] = 0;   //y coord. laser 1
-	bLaser1.f32Position[3] = 35;  //z coord. laser 1
-	bLaser2.f32Position[1] = 25;  //x coord. laser 2
-	bLaser2.f32Position[2] = 100; //y coord. laser 2
-	bLaser2.f32Position[3] = 35;  //z coord. laser 2
+	sBeamLaser1.f32Position[1] = 25;  //x coord. laser 1
+	sBeamLaser1.f32Position[2] = 0;   //y coord. laser 1
+	sBeamLaser1.f32Position[3] = 35;  //z coord. laser 1
+	sBeamLaser2.f32Position[1] = 25;  //x coord. laser 2
+	sBeamLaser2.f32Position[2] = 100; //y coord. laser 2
+	sBeamLaser2.f32Position[3] = 35;  //z coord. laser 2
 
 	//Hover Engine Positions {x,y,z} (from top view)
 	sHE1.f32Position[3] = {61, 130, 0}; // Top Left
@@ -93,13 +93,21 @@ void vLaserOrientation__Init(void)
 	sHE7.f32Position[3] = {0, 0, 0}; // Bottom Right
 	sHE8.f32Position[3] = {0, 0, 0}; // Bottom Left
 
-	vPrintPlane();
+	//vPrintPlane();
 
 }
 
+//Recalculate the orientation and engine heights
 void vLaserOrientation__Process(void)
 {
-		CalculateGroundPlane(struct sLaser1, struct sLaser2, struct sLaser3);
+    vCalculateGroundPlane(sGroundLaser1, sGroundLaser2, sGroundLaser3);
+
+	sHE1.f32Measurement = f32PointToPlaneDistance(sHE1.f32Position);
+	sHE2.f32Measurement = f32PointToPlaneDistance(sHE2.f32Position);
+	sHE3.f32Measurement = f32PointToPlaneDistance(sHE3.f32Position);
+	sHE4.f32Measurement = f32PointToPlaneDistance(sHE4.f32Position);
+	vRecalcPitch();
+	vRecalcRoll();
 }
 
 //Basically the vehicle is a static reference
@@ -116,19 +124,6 @@ Lfloat32 f32PointToPlaneDistance(Lfloat32 f32Position[3])
 	return (f32PlaneCoeffs[0] * f32Position[0] + f32PlaneCoeffs[1] * f32Position[1] + f32PlaneCoeffs[2] * f32Position[2] + f32PlaneCoeffs[3]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2]));
 }
 
-//After the laser readings are updated this function
-//will recalculate the orientation and engine heights
-void vRecalcOrientation(void)
-{
-    CalculateGroundPlane(Laser1X, Laser1Y, Laser1Z - Laser1Reading, Laser2X, Laser2Y, Laser2Z - Laser2Reading, Laser3X, Laser3Y, Laser3Z - Laser3Reading);
-
-	sHE1.f32Measurement = PointToPlaneDistance(sHE1.f32Position);
-	sHE2.f32Measurement = PointToPlaneDistance(sHE2.f32Position);
-	sHE3.f32Measurement = PointToPlaneDistance(sHE3.f32Position);
-	sHE4.f32Measurement = PointToPlaneDistance(sHE4.f32Position);
-	RecalcPitch();
-	RecalcRoll();
-}
 
 //The angle between two planes that yields the roll
 void vRecalcRoll(void)
@@ -137,7 +132,7 @@ void vRecalcRoll(void)
 	Lfloat32 f32vec1x = 1, f32vec1y = 0, f32vec1z = 0;
 
 	//Angle between two planes // TODO: Need to find a Lachlan func for this
-	Roll = (int16)(acos((double)((f32vec1x * f32PlaneCoeffs[0] + f32vec1y * f32PlaneCoeffs[1] + f32vec1z * f32PlaneCoeffs[2]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2])))) * 10000);
+	s16Roll = (Lint16)(acos((double)((f32vec1x * f32PlaneCoeffs[0] + f32vec1y * f32PlaneCoeffs[1] + f32vec1z * f32PlaneCoeffs[2]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2])))) * 10000);
 }
 
 //The angle between two planes that yields the pitch
@@ -147,7 +142,7 @@ void vRecalcPitch(void)
 	Lfloat32 f32vec1x = 0, f32vec1y = 1, f32vec1z = 0;
 
 	//Angle between two planes // TODO: Need to find a Lachlan func for this
-	Pitch = (int16)(acos((double)((f32vec1x * f32PlaneCoeffs[0] + f32vec1y * f32PlaneCoeffs[1] + f32vec1z * f32PlaneCoeffs[2]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2])))) * 10000);
+	s16Pitch = (Lint16)(acos((double)((f32vec1x * f32PlaneCoeffs[0] + f32vec1y * f32PlaneCoeffs[1] + f32vec1z * f32PlaneCoeffs[2]) / sqrt((double)(f32PlaneCoeffs[0] * f32PlaneCoeffs[0] + f32PlaneCoeffs[1] * f32PlaneCoeffs[1] + f32PlaneCoeffs[2] * f32PlaneCoeffs[2])))) * 10000);
 }
 
 void vPrintPlane(void)
@@ -162,15 +157,14 @@ void vCalculateGroundPlane(struct sLaserA, struct sLaserB, struct sLaserC)
 	Lfloat32 f32Vec1X, f32Vec1Y, f32Vec1Z;
 	Lfloat32 f32f32Vec2X, f32f32Vec2Y, f32f32Vec2Z;
 	Lfloat32 f32f32XProductX, f32f32XProductY, f32f32XProductZ;
-	Lfloat32 f32d;
 
 	//Calculate two vectors in the plane
-	f32Vec1X = sLaser1.f32Position[0] - sLaser2.f32Position[0];
-	f32Vec1Y = sLaser1.f32Position[1] - sLaser2.f32Position[1];
-	f32Vec1Z = (sLaser1.f32Position[2] - sLaser1.f32Measurement) - (sLaser2.f32Position[2] - sLaser2.f32Measurement);
-	f32Vec2X = sLaser2.f32Position[0] - sLaser3.f32Position[0];
-	f32Vec2Y = sLaser2.f32Position[1] - sLaser3.f32Position[1];
-	f32Vec2Z = (sLaser2.f32Position[2] - sLaser2.f32Measurement) - (sLaser3.f32Position[2] - sLaser3.f32Measurement);
+	f32Vec1X = sGroundLaser1.f32Position[0] - sGroundLaser2.f32Position[0];
+	f32Vec1Y = sGroundLaser1.f32Position[1] - sGroundLaser2.f32Position[1];
+	f32Vec1Z = (sGroundLaser1.f32Position[2] - sGroundLaser1.f32Measurement) - (sGroundLaser2.f32Position[2] - sGroundLaser2.f32Measurement);
+	f32Vec2X = sGroundLaser2.f32Position[0] - sGroundLaser3.f32Position[0];
+	f32Vec2Y = sGroundLaser2.f32Position[1] - sGroundLaser3.f32Position[1];
+	f32Vec2Z = (sGroundLaser2.f32Position[2] - sGroundLaser2.f32Measurement) - (sGroundLaser3.f32Position[2] - sGroundLaser3.f32Measurement);
 
 	//Calculate the cross product of the vectors
 	//to get a vector normal to the plane
@@ -189,27 +183,29 @@ void vCalculateGroundPlane(struct sLaserA, struct sLaserB, struct sLaserC)
 	//Plane in 3D: Ax + By + Cz + D = 0
 	//A, B, C is the vector normal to the plane
 	//Use one of our original points to calculate D
-	d = -1 * (f32XProductX * sLaser1.f32Position[0] + f32XProductY * sLaser1.f32Position[1] + f32XProductZ * sLaser1.f32Position[2]);
+	f32PlaneCoeffs[3] = -1 * (f32XProductX * sGroundLaser1.f32Position[0] + f32XProductY * sGroundLaser1.f32Position[1] + f32XProductZ * sGroundLaser1.f32Position[2]);
 
 	f32PlaneCoeffs[0] = f32XProductX;
 	f32PlaneCoeffs[1] = f32XProductY;
 	f32PlaneCoeffs[2] = f32XProductZ;
-	f32PlaneCoeffs[3] = f32d;
 }
 
 
-void vRecalcYaw(void) {
-  Lfloat32 sdif = (Lfloat32)(bLaser1.f32Measurement - bLaser2.f32Measurement);
-  Lfloat32 dtan = dif / ((Lfloat32)(bLaser1.f32Position[2] - bLaser2.f32Position[2]));
-  Yaw = (int16)(atan(dtan) * 10000);
+void vRecalcYaw(void) 
+{
+  Lfloat32 f32SDif = (Lfloat32)(sBeamLaser1.f32Measurement - sBeamLaser2.f32Measurement);
+  Lfloat32 f32DTan = f32SDif / ((Lfloat32)(sBeamLaser1.f32Position[2] - sBeamLaser2.f32Position[2]));
+  s16Yaw = (Lint16)(f32NUMERICAL_Atan(f32DTan) * 10000);
   // value expressed accordingly the rloop system variable
   // http://confluence.rloop.org/display/SD/System+Variables
 }
 
-void vRecalcLateral(void) {
-  Lfloat32 xdif = (Lfloat32)(bLaser1.f32Position[2] - bLaser2.f32Position[2]);
-  Lfloat32 coef =
-      ((Lfloat32)(bLaser2.f32Position[2]) / xdif * bLaser1.f32Measurement) -
-      ((Lfloat32)(bLaser1.f32Position[2]) / xdif * bLaser2.f32Measurement);
-  Lateral = coef * cos((Lfloat32)(Yaw) / 10000.0);
+
+void vRecalcLateral(void) 
+{
+  Lfloat32 f32XDif = (Lfloat32)(sBeamLaser1.f32Position[2] - sBeamLaser2.f32Position[2]);
+  Lfloat32 f32Coef=
+      ((Lfloat32)(sBeamLaser2.f32Position[2]) / f32XDif * sBeamLaser1.f32Measurement) -
+      ((Lfloat32)(sBeamLaser1.f32Position[2]) / f32XDif * sBeamLaser2.f32Measurement);
+  f32Lateral = f32Coef* f32NUMERICAL_Cosine((Lfloat32)(s16Yaw) / 10000.0);
 }
