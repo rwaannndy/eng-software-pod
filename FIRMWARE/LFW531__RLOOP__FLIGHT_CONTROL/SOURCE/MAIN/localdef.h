@@ -36,8 +36,12 @@ RLOOP - PI COMMUNICATIONS MODULE
 <<<<<<< HEAD
 =======
 		/** enable the receiver side? */
+<<<<<<< HEAD
 		#define C_LOCALDEF__LCCM656__ENABLE_RX								(0U)
 >>>>>>> ca5677ac2f0b28ece0e72dd3dd6fa4dbd87a73f4
+=======
+		#define C_LOCALDEF__LCCM656__ENABLE_RX								(1U)
+>>>>>>> 14f6ceb89e5be0c0a8e117e5b97ba00af63afff8
 
 		/** Testing Options */
 		#define C_LOCALDEF__LCCM656__ENABLE_TEST_SPEC						(0U)
@@ -51,6 +55,9 @@ RLOOP - FLIGHT CONTROL UNIT - CORE
 *******************************************************************************/
 	#define C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE							(1U)
 	#if C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE == 1U
+
+		/** Enable or disable the PiComms layer */
+		#define C_LOCALDEF__LCCM655__ENABLE_PI_COMMS						(0U)
 
 
 		#define C_LOCALDEF__LCCM655__EEPROM_OFFSET__BRAKES_HEADER			(40U)

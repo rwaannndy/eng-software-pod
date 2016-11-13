@@ -20,8 +20,12 @@ RLOOP - PI COMMUNICATIONS MODULE
 <<<<<<< HEAD
 =======
 		/** enable the receiver side? */
+<<<<<<< HEAD
 		#define C_LOCALDEF__LCCM656__ENABLE_RX								(0U)
 >>>>>>> ca5677ac2f0b28ece0e72dd3dd6fa4dbd87a73f4
+=======
+		#define C_LOCALDEF__LCCM656__ENABLE_RX								(1U)
+>>>>>>> 14f6ceb89e5be0c0a8e117e5b97ba00af63afff8
 
 		/** Testing Options */
 		#define C_LOCALDEF__LCCM656__ENABLE_TEST_SPEC						(0U)
