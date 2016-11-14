@@ -51,9 +51,17 @@ Structures
 struct _strComponent // TODO: might want to make a separate one for HE/laser, so that laser readings can be appended. or should hover height be set there similarly
 {
 	Lfloat32 f32Position[3]; // x,y,z
-	Lfloat32 f32Measurement;
+	Lfloat32 f32Measurement; // measurement returned from the distance lasers; height of hover engines above ground
 };
 
+struct _strPodOrientation
+{
+	Lint16 s16Roll;
+	Lint16 s16Pitch;
+	Lint16 s16Yaw;
+	Lfloat32 f32Lateral;
+
+};
 
 /*******************************************************************************
 Function Prototypes
