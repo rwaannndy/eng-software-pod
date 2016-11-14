@@ -18,11 +18,14 @@
 
 // TODO:
 // - we now have a 4th laser facing the ground, which will help determine if
-//	the frame of the pod has twisted.
+//	the frame of the pod has twisted. (change in flux 11.13.16)
 // - will want to calc roll/pitch as seen by two sets of 3 lasers (a,b,c; b,c,d)
 //	and return angle of twisting based on any discrepancy between the two measurements
 // - check flags from optoncdt.c to verify that all lasers are functional.
 //		- if one has failed, fall back to just pitch/roll with the 3 remaining
+
+// acos func?
+
 
 
 #include "LaserOrientation.h"
@@ -97,6 +100,9 @@ void vLaserOrientation__Init(void)
 	sOrient.s16Pitch = 0;
 	sOrient.s16Yaw = 0;
 	sOrient.f32Lateral = 0;
+	sOrient.f32PlaneCoeffs[4] = {0,0,0,0};
+
+	sOrient.eState = LaserOrientation_STATE__INIT;
 
 	//vPrintPlane();
 }
@@ -104,24 +110,40 @@ void vLaserOrientation__Init(void)
 //Recalculate the orientation and engine heights
 void vLaserOrientation__Process(void)
 {
-    vCalculateGroundPlane(sGroundLaser1, sGroundLaser2, sGroundLaser3);
+	//handle the state machine
+	switch(sOrient.eState)
+	{
+		case LaserOrientation_STATE__IDLE:
+			//do nothing
+			break;
 
-	sHE1.f32Measurement = f32PointToPlaneDistance(sHE1.f32Position);
-	sHE2.f32Measurement = f32PointToPlaneDistance(sHE2.f32Position);
-	sHE3.f32Measurement = f32PointToPlaneDistance(sHE3.f32Position);
-	sHE4.f32Measurement = f32PointToPlaneDistance(sHE4.f32Position);
-	vRecalcPitch();
-	vRecalcRoll();
+		case LaserOrientation_STATE__INIT:
+			break;
+
+		case LaserOrientation_STATE__RECALCULATE_ORIENTATION:
+			// if (all lasers are operational (checked in optoncdt.c))
+
+		    vCalculateGroundPlane(sGroundLaser1, sGroundLaser2, sGroundLaser3);
+
+			sHE1.f32Measurement = f32PointToPlaneDistance(sHE1.f32Position);
+			sHE2.f32Measurement = f32PointToPlaneDistance(sHE2.f32Position);
+			sHE3.f32Measurement = f32PointToPlaneDistance(sHE3.f32Position);
+			sHE4.f32Measurement = f32PointToPlaneDistance(sHE4.f32Position);
+			vRecalcPitch();
+			vRecalcRoll();
+
+			break;
+
+		case LaserOrientation_STATE__WAIT_LOOPS:
+			// TODO: is this needed?
+			break;
+
+		case LaserOrientation_STATE__ERROR:
+			//some error has happened
+			break;
+
+	}
 }
-
-//Basically the vehicle is a static reference
-//and we recalculate the orientation of the
-//ground plane relative to the vehicle
-//and the hover engines
-Lfloat32 f32PlaneCoeffs[4]; //TODO: Check this size   // ordered as: A, B, C, D, decreasing polynomial terms
-
-void vRecalcRoll();
-void vRecalcPitch();
 
 Lfloat32 f32PointToPlaneDistance(Lfloat32 f32Position[3])
 {

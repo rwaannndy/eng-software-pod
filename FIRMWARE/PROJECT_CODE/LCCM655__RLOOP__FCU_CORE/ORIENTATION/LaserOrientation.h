@@ -22,16 +22,7 @@ typedef enum
 	LaserOrientation_STATE__ERROR,
 
 	/** init the device, force a reset */
-	LaserOrientation_STATE__INIT_DEVICE,
-
-	/** Read the constants from the device */
-	LaserOrientation_STATE__READ_CONSTANTS,
-
-	/** Waiting for the start of a conversion*/
-	LaserOrientation_STATE__WAITING,
-
-	/** Issue the conversion command*/
-	LaserOrientation_STATE__BEGIN_SAMPLE,
+	LaserOrientation_STATE__INIT,
 
 	/** Wait for a number of processing loops to expire */
 	LaserOrientation_STATE__WAIT_LOOPS,
@@ -39,8 +30,6 @@ typedef enum
 	/** Read the ADC */
 	LaserOrientation_STATE__RECALCULATE_ORIENTATION,
 
-	/** Compute the result */
-	LaserOrientation_STATE__COMPUTE,
 
 }E_LaserOrientation_STATES_T;
 
@@ -60,6 +49,14 @@ struct _strPodOrientation
 	Lint16 s16Pitch;
 	Lint16 s16Yaw;
 	Lfloat32 f32Lateral;
+
+	//Basically the vehicle is a static reference
+	//and we recalculate the orientation of the
+	//ground plane relative to the vehicle
+	//and the hover engines
+	Lfloat32 f32PlaneCoeffs[4]; //TODO: Check this size   // ordered as: A, B, C, D, decreasing polynomial terms
+	
+	E_LaserOrientation_STATES_T eState
 
 };
 
