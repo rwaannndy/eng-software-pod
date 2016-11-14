@@ -29,6 +29,7 @@
 
 
 #include "LaserOrientation.h"
+#include "optoncdt.c" // TODO: is this ok?
 
 #define PI 3.14159265359
 
@@ -120,18 +121,74 @@ void vLaserOrientation__Process(void)
 		case LaserOrientation_STATE__INIT:
 			break;
 
-		case LaserOrientation_STATE__RECALCULATE_ORIENTATION:
+		case LaserOrientation_STATE__RECALCULATE_PITCH_AND_ROLL:
 			// if (all lasers are operational (checked in optoncdt.c))
+			Luint8 u8Operational;
+			if (sLaserGround1.eState == OPTONCDT_STATE__ERROR)
+			{
+				u8Operational = 0U;
+			}
+			else if (sLaserGround2.eState == OPTONCDT_STATE__ERROR)
+			{
+				u8Operational = 0U;
+			}
+			else if (sLaserGround3.eState == OPTONCDT_STATE__ERROR)
+			{
+				u8Operational = 0U;
+			}
+			else
+			{
+				u8Operational = 1U;
+			}
 
-		    vCalculateGroundPlane(sGroundLaser1, sGroundLaser2, sGroundLaser3);
 
-			sHE1.f32Measurement = f32PointToPlaneDistance(sHE1.f32Position);
-			sHE2.f32Measurement = f32PointToPlaneDistance(sHE2.f32Position);
-			sHE3.f32Measurement = f32PointToPlaneDistance(sHE3.f32Position);
-			sHE4.f32Measurement = f32PointToPlaneDistance(sHE4.f32Position);
-			vRecalcPitch();
-			vRecalcRoll();
+			if (u8Operational == 1U)
+			{
+			    vCalculateGroundPlane(sGroundLaser1, sGroundLaser2, sGroundLaser3);
 
+				sHE1.f32Measurement = f32PointToPlaneDistance(sHE1.f32Position);
+				sHE2.f32Measurement = f32PointToPlaneDistance(sHE2.f32Position);
+				sHE3.f32Measurement = f32PointToPlaneDistance(sHE3.f32Position);
+				sHE4.f32Measurement = f32PointToPlaneDistance(sHE4.f32Position);
+				vRecalcPitch();
+				vRecalcRoll();
+			}
+			else
+			{
+				// at least one ground laser is down; can't compute pitch/roll/HE heights.
+			}
+			sOrient.eState = LaserOrientation_STATE__RECALCULATE_YAW_AND_LATERAL;
+			break;
+
+		case LaserOrientation_STATE__RECALCULATE_YAW_AND_LATERAL:
+			Luint8 u8Operational;
+			if (sLaserBeam1.eState == OPTONCDT_STATE__ERROR)
+			{
+				u8Operational = 0U;
+			}
+			else if (sLaserBeam2.eState == OPTONCDT_STATE__ERROR)
+			{
+				u8Operational = 0U;
+			}
+			else if (sLaserBeam3.eState == OPTONCDT_STATE__ERROR)
+			{
+				u8Operational = 0U;
+			}
+			else
+			{
+				u8Operational = 1U;
+			}
+
+			if (u8Operational == 1U)
+			{
+				vRecalcYaw();
+				vRecalcLateral();
+			}
+			else
+			{
+				// At least one i-beam laser is down; can't compute yaw/translation.
+			}
+			// sOrient.eState = ; // TODO: finish state flow
 			break;
 
 		case LaserOrientation_STATE__WAIT_LOOPS:
