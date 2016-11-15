@@ -126,65 +126,117 @@ void vLaserOrientation__Process(void)
 		case LaserOrientation_STATE__INIT:
 			break;
 
-		case LaserOrientation_STATE__RECALCULATE_PITCH_AND_ROLL:
-			// if (all lasers are operational (checked in optoncdt.c))
-			Luint8 u8Operational = 0U;
-			if (sLaserGround1.eState == OPTONCDT_STATE__ERROR)
+		case LaserOrientation_STATE__RECALCULATE_PITCH_ROLL_TWIST:
+			// check laser states in optoncdt.c
+			// count which lasers are not in the error state and append them to array.
+			Luint8 u8OperationalCount = 0U;
+			Luint8 u8OperationalLasers[4]; // TODO: array of struct types? {sLaserGround1, sLaserGround2, ...}
+
+			if (sLaserGround1.eState != OPTONCDT_STATE__ERROR)
 			{
-				u8Operational += 1;
-			}
-			else if (sLaserGround2.eState == OPTONCDT_STATE__ERROR)
-			{
-				u8Operational += 1;
-			}
-			else if (sLaserGround3.eState == OPTONCDT_STATE__ERROR)
-			{
-				u8Operational = 0U;
+				u8OperationalLasers[u8OperationalCount] = 1U; // Laser 1 works, store a 1 in the array to denote this
+				u8OperationalCount += 1U; // increment count of operational lasers
 			}
 			else
 			{
-				u8Operational = 1U;
+				// laser 1 bad
+			}
+			if (sLaserGround2.eState == OPTONCDT_STATE__ERROR)
+			{
+				u8OperationalLasers[u8OperationalCount] = 2U; // Laser 2 works, store a 2 in the array to denote this
+				u8OperationalCount += 1U; // increment count of operational lasers
+			}
+			else
+			{
+				// laser 2 bad
+			}
+			if (sLaserGround3.eState == OPTONCDT_STATE__ERROR)
+			{
+				u8OperationalLasers[u8OperationalCount] = 3U; // Laser 3 works, store a 3 in the array to denote this
+				u8OperationalCount += 1U; // increment count of operational lasers
+			}
+			else
+			{
+				// laser 3 bad
+			}
+			if (sLaserGround4.eState == OPTONCDT_STATE__ERROR)
+			{
+				u8OperationalLasers[u8OperationalCount] = 4U; // Laser 4 works, store a 4 in the array to denote this
+				u8OperationalCount += 1U; // increment count of operational lasers
+			}
+			else
+			{
+				// laser 4 bad
 			}
 
-
-			if (u8Operational == 1U)
+			if (u8OperationalCount == 4U)
 			{
-			    vCalculateGroundPlane(sGroundLaser1, sGroundLaser2, sGroundLaser3);
+				// calculate pitch, roll, and twist of the pod
+			    vCalculateGroundPlane(sGroundLaser1, sGroundLaser2, sGroundLaser3); // TODO: make fns work together
+			    vCalculateGroundPlane(sGroundLaser2, sGroundLaser3, sGroundLaser4);
 
 				sHE1.f32Measurement = f32PointToPlaneDistance(sHE1.f32Position);
 				sHE2.f32Measurement = f32PointToPlaneDistance(sHE2.f32Position);
 				sHE3.f32Measurement = f32PointToPlaneDistance(sHE3.f32Position);
 				sHE4.f32Measurement = f32PointToPlaneDistance(sHE4.f32Position);
+
+				sHE5.f32Measurement = f32PointToPlaneDistance(sHE5.f32Position);
+				sHE6.f32Measurement = f32PointToPlaneDistance(sHE6.f32Position);
+				sHE7.f32Measurement = f32PointToPlaneDistance(sHE7.f32Position);
+				sHE8.f32Measurement = f32PointToPlaneDistance(sHE8.f32Position);
+
+				vRecalcPitch();
+				vRecalcRoll();
+
+				vCalculateTwist(); // TODO: write fn
+			}
+			else if (u8OperationalCount == 3U)
+			{ 
+				// calculate pitch and roll. cannot calculate twist.
+			    vCalculateGroundPlane(u8OperationalLasers[0], u8OperationalLasers[1], u8OperationalLasers[2]); // TODO: THIS DOES NOT WORK YET!
+
+				sHE1.f32Measurement = f32PointToPlaneDistance(sHE1.f32Position);
+				sHE2.f32Measurement = f32PointToPlaneDistance(sHE2.f32Position);
+				sHE3.f32Measurement = f32PointToPlaneDistance(sHE3.f32Position);
+				sHE4.f32Measurement = f32PointToPlaneDistance(sHE4.f32Position);
+
+				sHE5.f32Measurement = f32PointToPlaneDistance(sHE5.f32Position);
+				sHE6.f32Measurement = f32PointToPlaneDistance(sHE6.f32Position);
+				sHE7.f32Measurement = f32PointToPlaneDistance(sHE7.f32Position);
+				sHE8.f32Measurement = f32PointToPlaneDistance(sHE8.f32Position);
+
 				vRecalcPitch();
 				vRecalcRoll();
 			}
 			else
 			{
-				// at least one ground laser is down; can't compute pitch/roll/HE heights.
+				// there are 2 or fewer operable lasers; can't compute twist/pitch/roll/HE heights.
+
 			}
 			sOrient.eState = LaserOrientation_STATE__RECALCULATE_YAW_AND_LATERAL;
 			break;
 
 		case LaserOrientation_STATE__RECALCULATE_YAW_AND_LATERAL:
-			Luint8 u8Operational;
+			// check laser states in optoncdt.c
+			// count which lasers are not in the error state and append them to array.
+			Luint8 u8OperationalCount = 0U;
+			Luint8 u8OperationalLasers[2];
+
 			if (sLaserBeam1.eState == OPTONCDT_STATE__ERROR)
 			{
-				u8Operational = 0U;
+				u8OperationalLasers[u8OperationalCount] = 1U; // Laser 1 works, store a 1 in the array to denote this
+				u8OperationalCount += 1U; // increment count of operational lasers
 			}
 			else if (sLaserBeam2.eState == OPTONCDT_STATE__ERROR)
 			{
-				u8Operational = 0U;
-			}
-			else if (sLaserBeam3.eState == OPTONCDT_STATE__ERROR)
-			{
-				u8Operational = 0U;
+				u8OperationalLasers[u8OperationalCount] = 2U; // Laser 2 works, store a 2 in the array to denote this
+				u8OperationalCount += 1U; // increment count of operational lasers
 			}
 			else
 			{
-				u8Operational = 1U;
+				// All lasers operational.
 			}
-
-			if (u8Operational == 1U)
+			if (u8OperationalCount == 2U)
 			{
 				vRecalcYaw();
 				vRecalcLateral();
@@ -301,4 +353,10 @@ void vRecalcLateral(void)
       ((Lfloat32)(sBeamLaser2.f32Position[Z]) / f32XDif * sBeamLaser1.f32Measurement) -
       ((Lfloat32)(sBeamLaser1.f32Position[Z]) / f32XDif * sBeamLaser2.f32Measurement);
   sOrient.f32Lateral = f32Coef* f32NUMERICAL_Cosine((Lfloat32)(s16Yaw) / 10000.0);
+}
+
+
+void vCalculateTwist();
+{
+	
 }
